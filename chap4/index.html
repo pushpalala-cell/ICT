@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Game</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    margin: 0;
+    color: white;
+    background: linear-gradient(to top, #ff7e5f, #feb47b); /* Sunset */
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+.levels button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+#timer {
+    font-size: 20px;
+    margin: 10px;
+}
+
+.option {
+    background: #673ab7;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    cursor: grab;
+}
+
+.drop-zone {
+    border: 2px dashed white;
+    padding: 20px;
+    margin: 10px;
+}
+
+#restartBtn {
+    display: none;
+    padding: 10px;
+    background: red;
+    border: none;
+    border-radius: 10px;
+}
+
+.star {
+    font-size: 25px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🧠 Memory Master Game</h1>
+
+<div class="levels">
+<button onclick="startGame('easy')">Easy</button>
+<button onclick="startGame('medium')">Medium</button>
+<button onclick="startGame('hard')">Hard</button>
+</div>
+
+<div id="timer">⏱️ Time: 30</div>
+
+<h2 id="question"></h2>
+<img id="qImg" width="120">
+
+<div class="drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
+Drop Answer Here
+</div>
+
+<div id="options"></div>
+
+<h2 id="stars"></h2>
+<h2 id="badge"></h2>
+
+<button id="restartBtn" onclick="location.reload()">Restart</button>
+
+</div>
+
+<script>
+
+// VOICE
+function speak(text){
+let s=new SpeechSynthesisUtterance(text);
+speechSynthesis.speak(s);
+}
+
+// SOUND
+let correctSound=new Audio("correct.mp3");
+let wrongSound=new Audio("wrong.mp3");
+correctSound.volume=1;
+wrongSound.volume=1;
+
+// 50+ QUESTIONS
+let allQuestions=[];
+let base=[
+["Temporary memory?","RAM"],
+["Permanent memory?","ROM"],
+["Fastest memory?","Cache"],
+["Storage device?","Hard Disk"],
+["Portable storage?","Pen Drive"],
+["Volatile memory?","RAM"],
+["Non-volatile?","ROM"],
+["Internal memory?","Cache"],
+["External storage?","Hard Disk"],
+["Used to store files?","Pen Drive"]
+];
+
+// duplicate variations to make 50+
+for(let i=0;i<5;i++){
+base.forEach(q=>{
+allQuestions.push({
+q:q[0],
+img:"https://cdn-icons-png.flaticon.com/512/1041/1041916.png",
+options:[q[1],"Keyboard","Mouse"],
+ans:q[1]
+});
+});
+}
+
+let questions=[];
+let current=0;
+let score=0;
+let totalQ=10;
+let timer;
+let timeLeft=30;
+
+// START
+function startGame(level){
+questions=[...allQuestions].sort(()=>Math.random()-0.5).slice(0,totalQ);
+
+if(level=="easy") timeLeft=40;
+if(level=="medium") timeLeft=30;
+if(level=="hard") timeLeft=20;
+
+startTimer();
+speak("Start the game");
+loadQuestion();
+}
+
+// TIMER
+function startTimer(){
+timer=setInterval(()=>{
+timeLeft--;
+document.getElementById("timer").innerText="⏱️ "+timeLeft;
+
+if(timeLeft<=0){
+endGame();
+}
+},1000);
+}
+
+// LOAD
+function loadQuestion(){
+if(current>=questions.length){
+endGame();
+return;
+}
+
+let q=questions[current];
+document.getElementById("question").innerText=q.q;
+document.getElementById("qImg").src=q.img;
+
+speak(q.q);
+
+let optionsDiv=document.getElementById("options");
+optionsDiv.innerHTML="";
+
+q.options.sort(()=>Math.random()-0.5);
+
+q.options.forEach(opt=>{
+let div=document.createElement("div");
+div.className="option";
+div.innerText=opt;
+div.draggable=true;
+div.ondragstart=drag;
+optionsDiv.appendChild(div);
+});
+}
+
+// DRAG
+function drag(ev){
+ev.dataTransfer.setData("text",ev.target.innerText);
+}
+
+function allowDrop(ev){ev.preventDefault();}
+
+function drop(ev){
+ev.preventDefault();
+let data=ev.dataTransfer.getData("text");
+
+if(data===questions[current].ans){
+score++;
+correctSound.play();
+confetti();
+}else{
+wrongSound.play();
+}
+
+current++;
+setTimeout(loadQuestion,800);
+}
+
+// END
+function endGame(){
+clearInterval(timer);
+
+let stars="⭐".repeat(Math.ceil(score/2));
+let badge="";
+
+if(score<=4) badge="🏅 Beginner";
+else if(score<=7) badge="🥈 Pro";
+else badge="🏆 Master";
+
+document.getElementById("question").innerText="🎉 Game Over!";
+document.getElementById("options").innerHTML="";
+document.getElementById("stars").innerText="Stars: "+stars;
+document.getElementById("badge").innerText="Badge: "+badge;
+document.getElementById("restartBtn").style.display="block";
+}
+
+// CONFETTI
+function confetti(){
+for(let i=0;i<30;i++){
+let d=document.createElement("div");
+d.style.position="fixed";
+d.style.width="8px";
+d.style.height="8px";
+d.style.background="yellow";
+d.style.top=Math.random()*window.innerHeight+"px";
+d.style.left=Math.random()*window.innerWidth+"px";
+document.body.appendChild(d);
+setTimeout(()=>d.remove(),1000);
+}
+}
+
+</script>
+
+</body>
+</html>
