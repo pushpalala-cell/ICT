@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Etiquette Quiz</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    margin: 0;
+    color: white;
+    background: linear-gradient(to top, #ff7e5f, #feb47b, #ff6a88, #8e44ad);
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+select, button {
+    padding: 10px;
+    margin: 10px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+}
+
+button {
+    background: #333;
+    color: white;
+}
+
+#restartBtn {
+    display: none;
+    background: red;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📧 Email Etiquette Quiz</h1>
+
+<div id="timer">⏱️ Time: 60</div>
+
+<h2 id="question"></h2>
+
+<select id="dropdown"></select><br>
+<button onclick="checkAnswer()">Submit</button>
+
+<h3 id="progress"></h3>
+<h2 id="stars"></h2>
+<h2 id="badge"></h2>
+
+<button id="restartBtn" onclick="location.reload()">Restart</button>
+
+</div>
+
+<script>
+
+// 🎤 VOICE
+function speak(text){
+let s=new SpeechSynthesisUtterance(text);
+speechSynthesis.speak(s);
+}
+
+// 🔊 SOUND (Keep files in same folder)
+let correctSound=new Audio("correct.mp3");
+let wrongSound=new Audio("wrong.mp3");
+
+// 📚 BASE QUESTIONS
+let base=[
+["What should you write in subject line?","Short and clear"],
+["Should you greet in email?","Yes"],
+["Is it okay to use ALL CAPS?","No"],
+["Should you use polite words?","Yes"],
+["Should you check spelling?","Yes"],
+["Can you send rude email?","No"],
+["Should you say thank you?","Yes"],
+["Is email formal?","Yes"],
+["Use emojis in school email?","No"],
+["Should you write full sentences?","Yes"],
+["Should you include your name?","Yes"],
+["Is 'Dear Sir' a greeting?","Yes"],
+["Should you write clearly?","Yes"],
+["Should you re-read email?","Yes"],
+["Can you use slang?","No"]
+];
+
+// 🔀 CREATE 50+ QUESTIONS
+let allQuestions=[];
+for(let i=0;i<4;i++){
+base.forEach(q=>{
+allQuestions.push({
+q:q[0],
+options:[q[1],"No","Maybe"],
+ans:q[1]
+});
+});
+}
+
+// GAME VARIABLES
+let questions=[];
+let current=0;
+let score=0;
+let totalQ=10;
+let timeLeft=60;
+let timer;
+
+// ▶️ START GAME
+function startGame(){
+questions=[...allQuestions].sort(()=>Math.random()-0.5).slice(0,totalQ);
+startTimer();
+loadQuestion();
+}
+
+startGame();
+
+// ⏱️ TIMER
+function startTimer(){
+timer=setInterval(()=>{
+timeLeft--;
+document.getElementById("timer").innerText="⏱️ Time: "+timeLeft;
+
+if(timeLeft<=0){
+endGame();
+}
+},1000);
+}
+
+// 📥 LOAD QUESTION
+function loadQuestion(){
+if(current>=questions.length){
+endGame();
+return;
+}
+
+let q=questions[current];
+
+document.getElementById("question").innerText=q.q;
+document.getElementById("progress").innerText="Question "+(current+1)+" / "+totalQ;
+
+speak(q.q);
+
+// Dropdown options
+let dropdown=document.getElementById("dropdown");
+dropdown.innerHTML="";
+
+q.options.sort(()=>Math.random()-0.5);
+
+q.options.forEach(opt=>{
+let option=document.createElement("option");
+option.text=opt;
+dropdown.add(option);
+});
+}
+
+// ✅ CHECK ANSWER
+function checkAnswer(){
+let selected=document.getElementById("dropdown").value;
+
+if(selected===questions[current].ans){
+score++;
+correctSound.play();
+confetti();
+}else{
+wrongSound.play();
+}
+
+current++;
+loadQuestion();
+}
+
+// 🏁 END GAME
+function endGame(){
+clearInterval(timer);
+
+let stars="⭐".repeat(Math.ceil(score/2));
+let badge="";
+
+if(score<=4) badge="🏅 Beginner";
+else if(score<=7) badge="🥈 Pro";
+else badge="🏆 Master";
+
+document.getElementById("question").innerText="🎉 Game Over!";
+document.getElementById("stars").innerText="Stars: "+stars;
+document.getElementById("badge").innerText="Badge: "+badge;
+document.getElementById("restartBtn").style.display="block";
+}
+
+// 🎉 CONFETTI
+function confetti(){
+for(let i=0;i<30;i++){
+let d=document.createElement("div");
+d.style.position="fixed";
+d.style.width="8px";
+d.style.height="8px";
+d.style.background="yellow";
+d.style.top=Math.random()*window.innerHeight+"px";
+d.style.left=Math.random()*window.innerWidth+"px";
+document.body.appendChild(d);
+setTimeout(()=>d.remove(),1000);
+}
+}
+
+</script>
+
+</body>
+</html>
